@@ -466,7 +466,7 @@ function save() {
 }
 
 // 初期化
-state.ap = state.ap ?? 0; // 既にAPを持っているならそのまま
+state.ap = D(state.ap ?? 0); // 既にAPを持っているならそのまま
 state.anko = state.anko || {
     amount: D(0),                              // あんこ量（Decimal）
     dims: Array.from({ length: 9 }, (_, i) => ({    // 1..8を使用
@@ -601,7 +601,7 @@ function load() {
                 challenges: Array.from({ length: 13 }, () => ({ cleared: false, bestTime: null }))
             };
         }
-        state.ap = p.ap || D(0);
+        state.ap = D(p.ap ?? 0);
         state.anconityClears = p.anconityClears || 0;
         state.ankoTabUnlocked = !!p.ankoTabUnlocked;
         state.anconityReady = !!p.anconityReady;
@@ -1755,7 +1755,8 @@ function doAnconityExecute() {
 
     ankoChalLogic.completeAnkoChallenge()
     // AP +1
-    state.ap = (state.ap || 0) + 1 * getEffects().apMul;
+    const apMul = D(getEffects().apMul || 1);
+    state.ap = D(state.ap || 0).add(apMul); // AP + apMul
     state.anconityClears = (state.anconityClears || 0) + 1;
 
     // ずんだ/ブースト/アセン/プレステージ/枝豆/大豆/あんこディメンションを初期化
@@ -2426,7 +2427,7 @@ function refreshAnkoDimsUI() {
         if (c1) c1.textContent = (c == null) ? '未設定' : `AP ${c}`;
         const b1 = document.getElementById(`ad${i}-buy1`);
         const bm = document.getElementById(`ad${i}-buyMax`);
-        if (b1) b1.disabled = !(c != null && (state.ap || 0) >= c);
+        b1.disabled = !(c != null && D(state.ap || 0).gte(c));
         if (bm) bm.disabled = !(c != null && maxAffordableAD(i) > 0);
     }
 }
@@ -2562,7 +2563,7 @@ ankoChalUI.setStartHandler(ankoChalLogic.startAnkoChallenge);
 document.addEventListener('keydown', (e) => {
     if (e.key === 'p' || e.key === 'P') {
         state.zunda = new Decimal('1.8e308');
-        state.ap = 1;
+        state.ap = D(1);
         flashSaveStatus('💚 デバッグ: ずんだを 1e300 に設定しました');
         updateUI();
     }
@@ -2713,9 +2714,22 @@ function bootstrap() {
     if (ankoBtn) {
         ankoBtn.addEventListener('click', () => {
             if (!state.anconityReady) return;
-            ankoBtn.disabled = true;                   // 多重防止
+
+            const ok = confirm(
+                "アンコニティを実行しますか？\n\n" +
+                "以下の要素がリセットされます：\n" +
+                "・ずんだ\n" +
+                "・ずんだディメンション\n" +
+                "・ずんだブースト\n" +
+                "・アセンション\n" +
+                "・プレステージ\n" +
+                "・枝豆 / 大豆\n" +
+                "Anko Point を獲得して進行します。"
+            );
+            if (!ok) return;
+
+            ankoBtn.disabled = true; // 多重防止
             ankoShakeAndParticles(ankoBtn, () => {
-                // パーティクル後にアンコ実行（ここでボタン/バーが消えてOK）
                 doAnconityExecute();
                 ankoBtn.disabled = false;
             });
