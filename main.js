@@ -35,10 +35,17 @@ import { ZUNDA_AUTO_DELAY_MS } from "./src/constants/zundaTalk.js";
 
 import { ZUNDA_SPRITE } from "./src/constants/zundaSprites.js";
 
+import { ANKOMON_SPRITE } from "./src/constants/ankomonSprites.js";
+
 import {
     ZUNDA_LINES_NORMAL,
     ZUNDA_LINES_BY_PROGRESS
 } from "./src/constants/zundaLines.js";
+
+import {
+    ANKOMON_LINES_NORMAL,
+    ANKOMON_LINES_BY_PROGRESS
+} from "./src/constants/ankomonLines.js";
 
 import { createBubble } from "./src/ui/bubble.js";
 
@@ -2706,6 +2713,9 @@ function bootstrap() {
     refreshCostMultipliers();
     setEdaButtonState();
     recomputeAllSkillEffects();
+
+    askill.init();
+
     applyOfflineFromLastActive({ showToast: true });
     ankoChalUI.refreshAnkoChallengeRunningUI();
     updateUI();
